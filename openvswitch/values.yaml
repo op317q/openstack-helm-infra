@@ -96,6 +96,9 @@ pod:
         limits:
           memory: "1024Mi"
           cpu: "2000m"
+          # set resources to enabled and specify one of the following when using dpdk
+          # hugepages-1Gi: "1Gi"
+          # hugepages-2M: "512Mi"
     jobs:
       image_repo_sync:
         requests:
@@ -148,3 +151,14 @@ manifests:
   daemonset_ovs_vswitchd: true
   job_image_repo_sync: true
   network_policy: false
+
+conf:
+  dpdk:
+    enabled: false
+    socket_memory: 1024
+    hugepages_mountpath: /dev/hugepages
+    # optional parameters for tuning the OVS config
+    # in alignment with the available hardware resources
+    # mem_channels: 4
+    # lcore_mask: 0x1
+    # pmd_cpu_mask: 0x4

@@ -22,6 +22,13 @@ COMMAND="${@:-start}"
 OVS_SOCKET=/run/openvswitch/db.sock
 OVS_PID=/run/openvswitch/ovs-vswitchd.pid
 
+# Create vhostuser directory and grant nova user (UID 42424) access
+# permissions. Loci images use 42424 as default UID for service
+# accounts. Since the OVS image is not based on Loci, the nova user
+# does not exist and we need to use the raw UID here.
+mkdir -p /run/openvswitch/vhostuser
+chown 42424.42424 /run/openvswitch/vhostuser
+
 function start () {
   t=0
   while [ ! -e "${OVS_SOCKET}" ] ; do
@@ -34,7 +41,27 @@ function start () {
       fi
   done
 
-  ovs-vsctl --no-wait show
+  ovs-vsctl --db=unix:${OVS_SOCKET} --no-wait show
+
+{{- if .Values.conf.dpdk.enabled }}
+    ovs-vsctl --db=unix:${OVS_SOCKET} --no-wait set Open_vSwitch . other_config:dpdk-hugepage-dir={{ .Values.conf.dpdk.hugepages_mountpath | quote }}
+    ovs-vsctl --db=unix:${OVS_SOCKET} --no-wait set Open_vSwitch . other_config:dpdk-socket-mem={{ .Values.conf.dpdk.socket_memory | quote }}
+
+{{- if .Values.conf.dpdk.mem_channels }}
+    ovs-vsctl --db=unix:${OVS_SOCKET} --no-wait set Open_vSwitch . other_config:dpdk-mem-channels={{ .Values.conf.dpdk.mem_channels | quote }}
+{{- end }}
+
+{{- if .Values.conf.dpdk.pmd_cpu_mask }}
+    ovs-vsctl --db=unix:${OVS_SOCKET} --no-wait set Open_vSwitch . other_config:pmd-cpu-mask={{ .Values.conf.dpdk.pmd_cpu_mask | quote }}
+{{- end }}
+
+{{- if .Values.conf.dpdk.lcore_mask }}
+    ovs-vsctl --db=unix:${OVS_SOCKET} --no-wait set Open_vSwitch . other_config:dpdk-lcore-mask={{ .Values.conf.dpdk.lcore_mask | quote }}
+{{- end }}
+
+    ovs-vsctl --db=unix:${OVS_SOCKET} --no-wait set Open_vSwitch . other_config:vhost-sock-dir="vhostuser"
+    ovs-vsctl --db=unix:${OVS_SOCKET} --no-wait set Open_vSwitch . other_config:dpdk-init=true
+{{- end }}
 
   exec /usr/sbin/ovs-vswitchd unix:${OVS_SOCKET} \
           -vconsole:emer \

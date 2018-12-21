@@ -46,23 +46,6 @@ return: |
 {{- $component := index . 1 -}}
 {{- if $envAll.Values.pod.resources.enabled -}}
 resources:
-  {{- if or $component.limits.cpu $component.limits.memory }}
-  limits:
-    {{- if $component.limits.cpu }}
-    cpu: {{ $component.limits.cpu | quote }}
-    {{- end }}
-    {{- if $component.limits.memory }}
-    memory: {{ $component.limits.memory | quote }}
-    {{- end }}
-  {{- end }}
-  {{- if or $component.requests.cpu $component.requests.memory }}
-  requests:
-    {{- if $component.requests.cpu }}
-    cpu: {{ $component.requests.cpu | quote }}
-    {{- end }}
-    {{- if $component.requests.memory }}
-    memory: {{ $component.requests.memory | quote }}
-    {{- end }}
-  {{- end }}
+{{ toYaml $component | trim | indent 2 }}
 {{- end -}}
 {{- end -}}
