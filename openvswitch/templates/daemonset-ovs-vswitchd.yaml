@@ -124,10 +124,14 @@ of hugepages must still be defined in the values.yaml.*/}}
               mountPath: /sys/kernel/mm/hugepages
             - name: node-devices
               mountPath: /sys/devices/system/node
-            - mountPath: /lib/modules
-              name: modules
-            - mountPath: /dev
-              name: devs
+            - name: modules
+              mountPath: /lib/modules
+            - name: devs
+              mountPath: /dev
+            - name: pci-drivers
+              mountPath: /sys/bus/pci/drivers
+            - name: uio-device
+              mountPath: /sys/class/uio
 {{- end }}
       volumes:
         - name: pod-tmp
@@ -164,6 +168,14 @@ of hugepages must still be defined in the values.yaml.*/}}
         - name: modules
           hostPath:
             path: /lib/modules
+            type: Directory
+        - name: pci-drivers
+          hostPath:
+            path: /sys/bus/pci/drivers
+            type: Directory
+        - name: uio-device
+          hostPath:
+            path: /sys/class/uio
             type: Directory
         - name: hugepages
           hostPath:
